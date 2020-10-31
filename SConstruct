@@ -130,6 +130,12 @@ opts.Add(
     os.environ.get("ANDROID_NDK_ROOT", None)
 )
 
+opts.Add(
+    'project',
+    'project for dir'
+)
+
+
 def add_sources(sources, dir):
     for f in os.listdir(dir):
         if f.endswith(".cpp"):
@@ -137,6 +143,11 @@ def add_sources(sources, dir):
 
 opts.Update(env)
 Help(opts.GenerateHelpText(env))
+
+project = ARGUMENTS.get("project","null")
+if project == "null":
+    print("project not input!")
+    exit(-1)
 
 if host_platform == 'windows' and env['platform'] != 'android':
     if env['bits'] == '64':
@@ -238,7 +249,7 @@ elif env["platform"] == 'android':
     objs = []
     so_list = ""
 
-    add_sources(sour,"src")
+    add_sources(sour,project)
     if not os.path.exists("temp"):
         os.makedirs("temp")
 
@@ -256,7 +267,7 @@ elif env["platform"] == 'android':
         
     lib_pre = "godot-cpp"
     
-    bin_name="bin/libtest"+"."+env["platform"]+"."+target+"."+env['android_arch']+".so"
+    bin_name= str.format("bin/lib{}_{}_{}_{}.so",project,env["platform"],target,env['android_arch'])
     lib_name = lib_pre+"."+env["platform"]+"."+target+"."+env['android_arch']
     cmd = cc_dir + cxx+ str.format(" -o {} -shared {} -Lgodot-cpp/bin -l{}",bin_name,so_list,lib_name)
     print(cmd)
@@ -292,7 +303,7 @@ env.Append(LIBS=[lib_pre+"."+env["platform"]+"."+target+"."+arch_suffix])
 env.Append(LIBPATH=[godot_bindings_path + "/bin/"])
 
 sources = []
-add_sources(sources, "src")
+add_sources(sources, project)
 
 suffix = ".so"
 if env["platform"] == "windows":
@@ -300,7 +311,7 @@ if env["platform"] == "windows":
 elif env["platform"] == "osx":
     suffix = ".dylib"
 
-bin_name="libtest"+"."+env["platform"]+"."+target+"."+arch_suffix+suffix
+bin_name= str.format("lib{}_{}_{}_{}{}",project,env["platform"],target,arch_suffix,suffix)
 print(bin_name)
 library = env.SharedLibrary(target="bin/"+bin_name, source=sources)
 Default(library)

@@ -5,3 +5,4 @@
 /src/build/**
 /.sconsign.dblite
 /api.json
+/**/*.obj
