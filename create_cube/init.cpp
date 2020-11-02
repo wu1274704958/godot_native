@@ -83,22 +83,35 @@ class CreateCube : public godot::Spatial{
     {
         Godot::print("CreateCube _ready()");
         auto mi = create_cube({3,2,3,0,3,3});
-        auto mi2 = create_cube({3,2,3,0,3,3});
+        //auto mi2 = create_cube({3,2,3,0,3,3});
         auto zuan = create_cube({22,22,22,22,22,22});
         auto gold = create_cube({16,16,16,16,16,16});
         auto glass = create_cube({29,29,29,29,29,29});
         auto tree = create_cube({18,18,18,18,18,18});
-        mi2->set_translation(Vector3(0.0f,1.f,0.f));
+        //mi2->set_translation(Vector3(0.0f,1.f,0.f));
         zuan->set_translation(Vector3(0.0f,0.f,-1.f));
         gold->set_translation(Vector3(0.0f,0.f,1.f));
         glass->set_translation(Vector3(1.0f,0.f,0.f));
         tree->set_translation(Vector3(-1.f,0.f,0.f));
-        add_child(mi2);
+        //add_child(mi2);
         add_child(mi);
         add_child(zuan);
         add_child(gold);
         add_child(tree);
         add_child(glass);
+        int r = 32;
+        for(int y = -r;y <= r;++y)
+        {
+            for(int x = -r;x <= r;++x)
+            {
+                if( Vector2((float)x,(float)y).length() <= (float)r )
+                {
+                    auto soil = create_cube({3,2,3,0,3,3});
+                    soil->set_translation(Vector3((float)x,-1.f,(float)y));
+                    add_child(soil);
+                }
+            }
+        }
     }
 
     inline Variant create_cube(int _1,int _2,int _3,int _4,int _5,int _6)
