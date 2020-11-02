@@ -82,12 +82,12 @@ class CreateCube : public godot::Spatial{
     void _ready()
     {
         Godot::print("CreateCube _ready()");
-        auto mi = create_cube({3,1,3,2,3,3});
-        auto mi2 = create_cube({3,1,3,2,3,3});
+        auto mi = create_cube({3,2,3,0,3,3});
+        auto mi2 = create_cube({3,2,3,0,3,3});
         auto zuan = create_cube({22,22,22,22,22,22});
         auto gold = create_cube({16,16,16,16,16,16});
         auto glass = create_cube({29,29,29,29,29,29});
-        auto tree = create_cube({12,30,12,30,12,12});
+        auto tree = create_cube({18,18,18,18,18,18});
         mi2->set_translation(Vector3(0.0f,1.f,0.f));
         zuan->set_translation(Vector3(0.0f,0.f,-1.f));
         gold->set_translation(Vector3(0.0f,0.f,1.f));
@@ -99,6 +99,11 @@ class CreateCube : public godot::Spatial{
         add_child(gold);
         add_child(tree);
         add_child(glass);
+    }
+
+    inline Variant create_cube(int _1,int _2,int _3,int _4,int _5,int _6)
+    {
+        return create_cube({_1,_2,_3,_4,_5,_6});
     }
 
     MeshInstance* create_cube(std::array<int,6>&& ts)
@@ -121,12 +126,13 @@ class CreateCube : public godot::Spatial{
         mi->set_material_override(ResourceLoader::get_singleton()->load("res://textures/material.tres"));
         return mi;
     }
-    // sid  0 => front  Surface id
-    //      1 => up
-    //      2 => right
-    //      3 => down
-    //      4 => left
-    //      5 => behind
+    // sid Surface id
+    //	0 => front
+    //	1 => down
+    //	2 => right
+    //	3 => up
+    //	4 => left
+    //	5 => behind  
     void create_surface(SurfaceTool* st,int sid,int tid)
     {
         Vector3 normal = get_normal_form_sid(sid);
@@ -269,6 +275,8 @@ class CreateCube : public godot::Spatial{
     {
         godot::register_method("_ready", &CreateCube::_ready);
         godot::register_method("_process", &CreateCube::_process);
+        Variant(CreateCube::*func)(int,int,int,int,int,int) = &CreateCube::create_cube;
+        godot::register_method("create_cube",func);
     }
     float rotate = 0.f;
 };
