@@ -1,0 +1,6 @@
+{
+    "project":"D:\\go\\godot_projects",
+    "bin_dir":"scripts\\bin",
+    "mod" : ["create_cube"],
+    "debug":false
+}

@@ -132,7 +132,8 @@ class CreateCube : public godot::Spatial{
 
         for(int i = 0;i < ts.size();++i)
             create_surface(st,i,ts[i]);
-
+        st->generate_tangents();
+        st->index();
         auto mesh = st->commit();
         MeshInstance* mi = MeshInstance::_new();
         mi->set_mesh(mesh);
