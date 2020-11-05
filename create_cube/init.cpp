@@ -14,6 +14,8 @@
 #include <PoolArrays.hpp>
 #include <Transform.hpp>
 #include <Spatial.hpp>
+#include "cube_def.hpp"
+#include <vector>
 
 using namespace godot;
 
@@ -78,27 +80,18 @@ class CreateCube : public godot::Spatial{
     void _init() 
     {
         Godot::print("CreateCube _init()");
+        setup_to_map(map,TUP_CUBES());
+        init_voxel();
     }
     void _ready()
     {
         Godot::print("CreateCube _ready()");
-        auto mi = create_cube({3,2,3,0,3,3});
-        //auto mi2 = create_cube({3,2,3,0,3,3});
-        auto zuan = create_cube({22,22,22,22,22,22});
-        auto gold = create_cube({16,16,16,16,16,16});
-        auto glass = create_cube({29,29,29,29,29,29});
-        auto tree = create_cube({18,18,18,18,18,18});
-        //mi2->set_translation(Vector3(0.0f,1.f,0.f));
-        zuan->set_translation(Vector3(0.0f,0.f,-1.f));
-        gold->set_translation(Vector3(0.0f,0.f,1.f));
-        glass->set_translation(Vector3(1.0f,0.f,0.f));
-        tree->set_translation(Vector3(-1.f,0.f,0.f));
-        //add_child(mi2);
-        add_child(mi);
-        add_child(zuan);
-        add_child(gold);
-        add_child(tree);
-        add_child(glass);
+        
+        
+        add_voxel(2, Vector3(0.0f,0.f,0.f));
+        //add_voxel(2, Vector3(0.0f,0.f,1.f));
+        // add_voxel(2, Vector3(1.0f,0.f,0.f));
+        // add_voxel(2, Vector3(-1.f,0.f,0.f));
         int r = 32;
         for(int y = -r;y <= r;++y)
         {
@@ -106,9 +99,7 @@ class CreateCube : public godot::Spatial{
             {
                 if( Vector2((float)x,(float)y).length() <= (float)r )
                 {
-                    auto soil = create_cube({3,2,3,0,3,3});
-                    soil->set_translation(Vector3((float)x,-1.f,(float)y));
-                    add_child(soil);
+                    add_voxel(14,Vector3((float)x,-1.f,(float)y));
                 }
             }
         }
@@ -207,7 +198,7 @@ class CreateCube : public godot::Spatial{
         }
     }
 
-    void get_pos_form_sid(PoolVector3Array* out,int sid,float scale = 1.f)
+    void get_pos_form_sid(PoolVector3Array* out,int sid,float scale = 1.f,Vector3 pos = Vector3(0.f,0.f,0.f))
     {
         Vector3 luf(-0.5f * scale,-0.5f * scale,0.5f * scale );
         Vector3 ruf(0.5f * scale,-0.5f * scale,0.5f * scale );
@@ -218,6 +209,18 @@ class CreateCube : public godot::Spatial{
         Vector3 rub(0.5f * scale,-0.5f * scale,-0.5f * scale );
         Vector3 rdb(0.5f * scale,0.5f * scale,-0.5f * scale );
         Vector3 ldb(-0.5f * scale,0.5f * scale,-0.5f * scale );
+
+        if(pos != Vector3(0.f,0.f,0.f))
+        {
+            luf += pos;
+            ruf += pos;
+            rdf += pos;
+            ldf += pos;
+            lub += pos;
+            rub += pos;
+            rdb += pos;
+            ldb += pos;
+        }
 
         switch (sid)
         {
@@ -281,6 +284,9 @@ class CreateCube : public godot::Spatial{
 
     void _process(double delta)
     {
+        if(voxel_update)
+            draw_world();
+
         rotate += delta;
         if(rotate > 360.f) rotate = 0.f;
         set_rotation(Vector3(0.f,rotate,0.f));
@@ -292,7 +298,125 @@ class CreateCube : public godot::Spatial{
         Variant(CreateCube::*func)(int,int,int,int,int,int) = &CreateCube::create_cube;
         godot::register_method("create_cube",func);
     }
+
+    void init_voxel()
+    {
+        int world_voxel_num = world_radius_h * 2 * world_radius_h * 2 * world_radius_v * 2;
+        //char buf[100] = {0};
+        //sprintf(buf,"world_voxel_num = %d",world_voxel_num);
+        //Godot::print(buf);
+        voxel.reserve(world_voxel_num);
+        for (int i = 0;i < world_voxel_num;++i)
+            voxel.push_back(-1);
+        begin_voxel = Vector3(-world_radius_h,-world_radius_v,-world_radius_h);
+        end_voxel = Vector3(world_radius_h,world_radius_v,world_radius_h);
+    }
+
+    bool add_voxel(int id,Vector3 pos)
+    {
+        //printf("add voxle %f %f %f\n",pos.x,pos.y,pos.z);
+        if(map.find(id) != map.end() && at_world(pos))
+        {
+            int idx = get_voxel(pos);
+            //printf("add voxle %f %f %f %d --------------------------------\n",pos.x,pos.y,pos.z,idx);
+            if(idx < voxel.size() && idx >= 0)
+            {
+                voxel[ idx ] = id;
+                voxel_update = true;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    size_t get_voxel(Vector3& p)
+    {
+        p -= this->pos;
+        p.x += world_radius_h;
+        p.y += world_radius_v;
+        p.z += world_radius_h;
+        return (world_radius_v * 2 * world_radius_h * 2) * p.z + (p.y * world_radius_h * 2) + p.x;
+    }
+
+    bool at_world(Vector3& p)
+    {
+        return (p.x >= begin_voxel.x && p.y >= begin_voxel.y && p.z >= begin_voxel.z) && (p.x < end_voxel.x && p.y < end_voxel.y && p.z < end_voxel.z);
+    }
+
+    void draw_voxel_sur(SurfaceTool* st,int sid,int tid,Vector3& pos)
+    {
+        Vector3 normal = get_normal_form_sid(sid);
+        Rect2 uv = get_uv_form_tid(tid);
+        PoolVector3Array verices;
+        get_pos_form_sid(&verices,sid,1.f,pos);
+
+        for(int i = 0;i < verices.size();++i)
+        {
+            //printf("x = %f y = %f z = %f \n",verices[i].x,verices[i].y,verices[i].z);
+            st->add_normal(normal);
+            st->add_uv(get_uv_form_vertex(i,&uv));
+            st->add_vertex(verices[i]);
+        }
+    }
+
+    void draw_voxel(SurfaceTool* st,Vector3& pos,int id)
+    {
+        //printf("%d  x = %f y = %f z = %f \n",id,pos.x,pos.y,pos.z);
+        std::array<int,6>& ts = map[id];
+        //printf("%d  %d %d %d %d %d %d\n",id,ts[0],ts[1],ts[2],ts[3],ts[4],ts[5]);
+        for(int i = 0;i < ts.size();++i)
+            draw_voxel_sur(st,i,ts[i],pos);
+    }
+
+    void draw_world()
+    {
+        Godot::print("draw_world!!!");
+        voxel_update = false;
+        godot::Array chs = get_children();
+        for(int i = 0;i < chs.size();++i)
+        {
+            remove_child(chs[i]);
+        }
+        SurfaceTool* st = SurfaceTool::_new();
+        st->begin(Mesh::PRIMITIVE_TRIANGLES);
+
+
+        int idx = 0;
+        for(int z = -world_radius_h;z < world_radius_h; ++z)
+        {
+            for(int y = -world_radius_v;y < world_radius_v; ++y)
+            {
+                for(int x = -world_radius_h;x < world_radius_h; ++x)
+                {
+                    //printf("%d %d\n",idx,voxel[idx]);
+                    if(voxel[idx] >= 0)
+                    {
+                        Vector3 p( (float)x + pos.x,(float)y + pos.y,(float)z + pos.z );
+                        draw_voxel(st,p,voxel[idx]);
+                    }
+                    idx++;
+                }
+            }   
+        }
+
+        st->generate_tangents();
+        st->index();
+        auto mesh = st->commit();
+        MeshInstance* mi = MeshInstance::_new();
+        mi->set_mesh(mesh);
+        mi->set_material_override(ResourceLoader::get_singleton()->load("res://textures/material.tres"));
+        add_child(mi);
+    }
+
+
     float rotate = 0.f;
+    std::vector<int> voxel;
+    bool voxel_update = false;
+    Vector3 pos;
+    std::unordered_map<int,std::array<int,6>> map;
+    int world_radius_h = 33;
+    int world_radius_v = 16;
+    Vector3 begin_voxel,end_voxel;
 };
 
 /** GDNative Initialize **/
