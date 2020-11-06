@@ -77,6 +77,9 @@ class CreateCube : public godot::Spatial{
     GODOT_CLASS(CreateCube, godot::Spatial)
     public:
     CreateCube(){}
+    ~CreateCube(){
+        Godot::print("~CreateCube()");
+    }
     void _init() 
     {
         Godot::print("CreateCube _init()");
@@ -126,6 +129,7 @@ class CreateCube : public godot::Spatial{
         st->generate_tangents();
         st->index();
         auto mesh = st->commit();
+        st->free();
         MeshInstance* mi = MeshInstance::_new();
         mi->set_mesh(mesh);
         mi->set_material_override(ResourceLoader::get_singleton()->load("res://textures/material.tres"));
@@ -297,6 +301,7 @@ class CreateCube : public godot::Spatial{
         godot::register_method("_process", &CreateCube::_process);
         Variant(CreateCube::*func)(int,int,int,int,int,int) = &CreateCube::create_cube;
         godot::register_method("create_cube",func);
+        godot::register_method("add_voxel",&CreateCube::add_voxel);
     }
 
     void init_voxel()
@@ -372,11 +377,7 @@ class CreateCube : public godot::Spatial{
     {
         Godot::print("draw_world!!!");
         voxel_update = false;
-        godot::Array chs = get_children();
-        for(int i = 0;i < chs.size();++i)
-        {
-            remove_child(chs[i]);
-        }
+        clear_children();
         SurfaceTool* st = SurfaceTool::_new();
         st->begin(Mesh::PRIMITIVE_TRIANGLES);
 
@@ -402,12 +403,22 @@ class CreateCube : public godot::Spatial{
         st->generate_tangents();
         st->index();
         auto mesh = st->commit();
+        st->free();
         MeshInstance* mi = MeshInstance::_new();
         mi->set_mesh(mesh);
         mi->set_material_override(ResourceLoader::get_singleton()->load("res://textures/material.tres"));
         add_child(mi);
     }
-
+    
+    void clear_children()
+    {
+        godot::Array& chs = get_children();
+        for(int i = 0;i < chs.size();++i)
+        {
+            remove_child(chs[i]);
+            ((Node*)chs[i])->free();
+        }
+    }
 
     float rotate = 0.f;
     std::vector<int> voxel;
