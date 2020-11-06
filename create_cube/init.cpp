@@ -412,7 +412,7 @@ class CreateCube : public godot::Spatial{
     
     void clear_children()
     {
-        godot::Array& chs = get_children();
+        const godot::Array& chs = get_children();
         for(int i = 0;i < chs.size();++i)
         {
             remove_child(chs[i]);
