@@ -103,10 +103,13 @@ using TUP_CUBES = std::tuple<
     CubeDef<12,MaterialDef<14,14,14,14,14,14>>, // 铁块
     CubeDef<13,MaterialDef<13,13,13,13,13,13>>, // 钻石块
     CubeDef<14,MaterialDef<15,15,15,15,15,15>>, // 金块
+    CubeDef<15,MaterialDef<29,29,29,29,29,29>>, // 玻璃
+    CubeDef<16,MaterialDef<25,25,25,25,25,25>>, // 叶子1
+    CubeDef<17,MaterialDef<26,26,26,26,26,26>>, // 叶子2
 
-    CubeDef<15,MaterialDef<3,2,3,0,3,3>>, // 草地
-    CubeDef<16,MaterialDef<12,30,12,30,12,12>>, // 树干
-    CubeDef<17,MaterialDef<19,4,4,4,4,4>> // 书架
+    CubeDef<50,MaterialDef<3,2,3,0,3,3>>, // 草地
+    CubeDef<51,MaterialDef<12,30,12,30,12,12>>, // 树干
+    CubeDef<52,MaterialDef<19,4,4,4,4,4>> // 书架
 >;
 
 template<int ID,typename F,typename ... CS>

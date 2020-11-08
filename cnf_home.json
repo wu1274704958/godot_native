@@ -1,0 +1,6 @@
+{
+    "project":"D:\\cpp_project\\godot_game",
+    "bin_dir":"scripts\\bin",
+    "mod" : ["create_cube"],
+    "debug":false
+}

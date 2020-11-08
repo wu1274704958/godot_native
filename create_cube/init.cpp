@@ -102,7 +102,7 @@ class CreateCube : public godot::Spatial{
             {
                 if( Vector2((float)x,(float)y).length() <= (float)r )
                 {
-                    add_voxel(14,Vector3((float)x,-1.f,(float)y));
+                    add_voxel(50,Vector3((float)x,-1.f,(float)y));
                 }
             }
         }
